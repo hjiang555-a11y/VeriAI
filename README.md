@@ -24,6 +24,15 @@
 - 多代理 Spec2RTL 系统
 - FastAPI 后端 + Docker 部署
 
+## Verilog 模块库（lib/）
+
+| 模块 | 路径 | 状态 | 说明 |
+|------|------|------|------|
+| `sync_fifo` | [`lib/fifo/`](lib/fifo/) | ✅ 金标准 | 参数化同步 FIFO，含 testbench 和仿真脚本 |
+
+> **金标准模块**：经过完整 testbench 验证，可作为后续 AI 生成代码或 DUT 变体的对照基准。
+> 详见各模块目录下的 `README.md`，其中包含接口说明、验证覆盖矩阵和验收检查清单。
+
 ## 文档与规划
 - [`docs/resources.md`](docs/resources.md)：公开可信资源（开源 IP 库 / LLM 语料 / 规范文档）
 - [`docs/templates/spec_template.md`](docs/templates/spec_template.md)：任务书模板
@@ -43,6 +52,10 @@ VeriAI/
 │   └── pipeline/                # 全链条流水线
 ├── lib/                         # 参数化 Verilog 模块库
 │   ├── fifo/
+│   │   ├── sync_fifo.v          # ✅ 金标准同步 FIFO RTL
+│   │   ├── tb_sync_fifo.v       # 配套 testbench（10 类边界场景）
+│   │   ├── Makefile             # iverilog 仿真脚本
+│   │   └── README.md            # 接口说明 + 验证覆盖矩阵 + 验收清单
 │   ├── uart/
 │   └── axi/
 ├── docs/                        # 文档
