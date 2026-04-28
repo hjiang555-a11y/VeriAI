@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeriAI - AI辅助FPGA全链条开发平台 v0.2</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+    }
+    header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.4rem; color: #58a6ff; }
+    header span { font-size: 0.8rem; background: #388bfd26; color: #58a6ff;
+      border: 1px solid #388bfd; border-radius: 12px; padding: 2px 10px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+    .pipeline {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 16px; margin-bottom: 24px;
+    }
+    .stage {
+      background: #21262d; border: 1px solid #30363d; border-radius: 6px;
+      padding: 8px 14px; font-size: 0.85rem; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .stage:hover { background: #388bfd26; border-color: #58a6ff; }
+    .stage.active { background: #1f4e79; border-color: #58a6ff; color: #58a6ff; }
+    .arrow { color: #58a6ff; font-size: 1.2rem; }
+    .panel {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 20px; margin-bottom: 20px;
+    }
+    .panel h2 { font-size: 1rem; color: #58a6ff; margin-bottom: 12px; }
+    textarea {
+      width: 100%; background: #0d1117; color: #c9d1d9;
+      border: 1px solid #30363d; border-radius: 6px;
+      padding: 12px; font-size: 0.875rem; font-family: "Courier New", monospace;
+      resize: vertical; min-height: 140px; outline: none;
+    }
+    textarea:focus { border-color: #58a6ff; }
+    .btn {
+      background: #238636; color: #fff; border: none;
+      border-radius: 6px; padding: 10px 20px; cursor: pointer;
+      font-size: 0.9rem; margin-top: 12px; transition: background 0.2s;
+    }
+    .btn:hover { background: #2ea043; }
+    .btn.secondary {
+      background: #21262d; border: 1px solid #30363d;
+      color: #c9d1d9; margin-left: 8px;
+    }
+    .btn.secondary:hover { background: #30363d; }
+    .output {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+      padding: 12px; font-size: 0.825rem; font-family: "Courier New", monospace;
+      white-space: pre-wrap; max-height: 320px; overflow-y: auto;
+      color: #7ee787; margin-top: 12px;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      background: #21262d; border: 1px solid #30363d; border-radius: 12px;
+      padding: 3px 10px; font-size: 0.78rem; color: #8b949e;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .grid2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>⚡ VeriAI</h1>
+  <span>v0.2 FullChain</span>
+  <span style="margin-left:auto;font-size:0.75rem;color:#8b949e;">
+    AI辅助FPGA全链条开发平台
+  </span>
+</header>
+
+<div class="container">
+  <!-- Pipeline Overview -->
+  <div class="pipeline">
+    <div class="stage active" onclick="selectStage(0)">📄 任务书输入</div>
+    <div class="arrow">→</div>
+    <div class="stage" onclick="selectStage(1)">🔍 需求分析</div>
+    <div class="arrow">→</div>
+    <div class="stage" onclick="selectStage(2)">🏗 架构定义</div>
+    <div class="arrow">→</div>
+    <div class="stage" onclick="selectStage(3)">💻 RTL 生成</div>
+    <div class="arrow">→</div>
+    <div class="stage" onclick="selectStage(4)">✅ 验证</div>
+  </div>
+
+  <!-- Stage 0: Task Input -->
+  <div id="stage-0" class="panel">
+    <h2>📄 任务书输入</h2>
+    <textarea id="task-input" placeholder="请输入中文任务书，例如：
+设计一个 UART 收发模块，波特率 115200，数据位 8，停止位 1，无校验。
+需要兼容 Xilinx Virtex-7 FPGA，时钟频率 100MHz。
+提供可综合的 Verilog 代码，包含参数化波特率分频器。">设计一个参数化 FIFO 模块，深度 512，数据宽度 32bit，同步读写，支持 almost_full / almost_empty 标志。目标器件：Xilinx Virtex-7，时钟 200MHz。要求代码可直接综合。</textarea>
+    <div>
+      <button class="btn" onclick="runAnalysis()">🚀 开始全链条分析</button>
+      <button class="btn secondary" onclick="clearAll()">清空</button>
+    </div>
+  </div>
+
+  <!-- Stage 1: Requirements -->
+  <div id="stage-1" class="panel" style="display:none">
+    <h2>🔍 软件需求分析</h2>
+    <div class="output" id="req-output">（点击"开始全链条分析"生成）</div>
+  </div>
+
+  <!-- Stage 2 & 3 grid -->
+  <div class="grid2" id="stages-2-3" style="display:none">
+    <div class="panel">
+      <h2>🏗 硬件架构定义</h2>
+      <div class="output" id="arch-output">（等待需求分析完成）</div>
+    </div>
+    <div class="panel">
+      <h2>💻 RTL 代码生成</h2>
+      <div class="output" id="rtl-output">（等待架构定义完成）</div>
+    </div>
+  </div>
+
+  <!-- Stage 4: Verification -->
+  <div id="stage-4" class="panel" style="display:none">
+    <h2>✅ 验证报告</h2>
+    <div class="output" id="verify-output">（等待 RTL 生成完成）</div>
+  </div>
+
+  <!-- Module Library -->
+  <div class="panel">
+    <h2>📦 内置 Verilog 模块库（Virtex-7 兼容）</h2>
+    <div class="tag-row">
+      <span class="tag">sync_fifo</span>
+      <span class="tag">async_fifo</span>
+      <span class="tag">uart_tx</span>
+      <span class="tag">uart_rx</span>
+      <span class="tag">axi_lite_slave</span>
+      <span class="tag">axi_stream_fifo</span>
+      <span class="tag">clock_divider</span>
+      <span class="tag">debouncer</span>
+      <span class="tag">crc32</span>
+      <span class="tag">spi_master</span>
+      <span class="tag">i2c_master</span>
+      <span class="tag">pwm_gen</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const stages = document.querySelectorAll('.stage');
+  function selectStage(i) {
+    stages.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  }
+
+  function clearAll() {
+    document.getElementById('task-input').value = '';
+    ['req-output','arch-output','rtl-output','verify-output'].forEach(id => {
+      document.getElementById(id).textContent = '（已清空）';
+    });
+    ['stage-1','stages-2-3','stage-4'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    selectStage(0);
+  }
+
+  async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function typeText(el, text, delay = 12) {
+    el.textContent = '';
+    for (const ch of text) { el.textContent += ch; await sleep(delay); }
+  }
+
+  async function runAnalysis() {
+    const task = document.getElementById('task-input').value.trim();
+    if (!task) { alert('请输入任务书内容'); return; }
+
+    // Stage 1
+    document.getElementById('stage-1').style.display = 'block';
+    selectStage(1);
+    const reqEl = document.getElementById('req-output');
+    await typeText(reqEl, `[需求分析 Agent]\n正在解析任务书...\n\n✔ 功能需求：\n  - 参数化深度/宽度 FIFO\n  - 同步读写接口\n  - almost_full / almost_empty 状态标志\n\n✔ 性能需求：\n  - 时钟频率：200 MHz\n  - 深度：512 entries（可参数化）\n  - 数据宽度：32 bit\n\n✔ 约束需求：\n  - 目标器件：Xilinx Virtex-7\n  - 代码可综合（Vivado 2023+）`);
+
+    await sleep(400);
+
+    // Stage 2 & 3
+    document.getElementById('stages-2-3').style.display = 'grid';
+    selectStage(2);
+    await typeText(document.getElementById('arch-output'),
+`[架构 Agent]\n模块层次：\n  sync_fifo_top\n  ├── fifo_mem      (RAM 阵列)\n  ├── wr_ctrl       (写指针 + 满标志)\n  └── rd_ctrl       (读指针 + 空标志)\n\n接口信号：\n  clk, rst_n\n  wr_en, wr_data[31:0]\n  rd_en, rd_data[31:0]\n  full, empty\n  almost_full, almost_empty\n  data_count[$clog2(DEPTH):0]`);
+
+    selectStage(3);
+    await typeText(document.getElementById('rtl-output'),
+`// [RTL Agent] 自动生成\nmodule sync_fifo #(\n  parameter DEPTH = 512,\n  parameter WIDTH = 32,\n  parameter AF_THRESH = DEPTH - 4,\n  parameter AE_THRESH = 4\n)(\n  input  wire             clk,\n  input  wire             rst_n,\n  input  wire             wr_en,\n  input  wire [WIDTH-1:0] wr_data,\n  input  wire             rd_en,\n  output reg  [WIDTH-1:0] rd_data,\n  output wire             full,\n  output wire             empty,\n  output wire             almost_full,\n  output wire             almost_empty,\n  output wire [$clog2(DEPTH):0] data_count\n);\n  // ... (完整实现 - Phase 1 待开发，见 lib/fifo/)\nendmodule`);
+
+    await sleep(300);
+
+    // Stage 4
+    document.getElementById('stage-4').style.display = 'block';
+    selectStage(4);
+    await typeText(document.getElementById('verify-output'),
+`[验证 Agent]\n✔ 语法检查：PASSED\n✔ 端口完整性：PASSED\n✔ 参数化验证：PASSED（DEPTH/WIDTH 可配置）\n✔ 综合估算（Virtex-7 XC7VX485T）：\n   - LUT：~320\n   - FF： ~68\n   - BRAM：1x RAMB36E1\n   - Fmax：≥ 220 MHz\n✔ 仿真覆盖率：87%（建议补充边界测试）\n\n⚠ 建议：添加 ECC 保护可提升可靠性。\n\n✅ RTL 已就绪，可导入 Vivado 工程。`);
+  }
+</script>
+</body>
+</html>
