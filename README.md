@@ -24,6 +24,15 @@
 - 多代理 Spec2RTL 系统
 - FastAPI 后端 + Docker 部署
 
+## 文档与规划
+- [`docs/resources.md`](docs/resources.md)：公开可信资源（开源 IP 库 / LLM 语料 / 规范文档）
+- [`docs/templates/spec_template.md`](docs/templates/spec_template.md)：任务书模板
+- [`docs/templates/srs_template.md`](docs/templates/srs_template.md)：软件需求文档模板（含 RTM）
+- [`docs/templates/hid_template.md`](docs/templates/hid_template.md)：硬件接口描述模板
+- [`docs/schemas/hid.schema.json`](docs/schemas/hid.schema.json)：HID JSON Schema 校验
+
+文档链路：`spec → srs → hid → rtl → verify`，每一步都可被下游 Agent 反向追溯。
+
 ## 仓库初始结构
 
 ```
@@ -37,7 +46,13 @@ VeriAI/
 │   ├── uart/
 │   └── axi/
 ├── docs/                        # 文档
-│   └── spec_template.md         # 任务书模板
+│   ├── resources.md             # 公开可信资源清单
+│   ├── templates/               # 文档模板
+│   │   ├── spec_template.md     # 任务书模板（含 YAML Front Matter）
+│   │   ├── srs_template.md      # 软件需求文档模板（FR/NFR/C + RTM）
+│   │   └── hid_template.md      # 硬件接口描述模板（YAML）
+│   └── schemas/
+│       └── hid.schema.json      # HID YAML 的 JSON Schema 校验
 └── README.md
 ```
 

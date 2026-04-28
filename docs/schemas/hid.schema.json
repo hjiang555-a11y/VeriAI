@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/hjiang555-a11y/VeriAI/blob/main/docs/schemas/hid.schema.json",
+  "title": "VeriAI Hardware Interface Description (HID)",
+  "description": "Schema for VeriAI HID YAML/JSON documents that define a hardware module's external interface.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["hid_version", "module", "clocks", "resets", "ports"],
+  "properties": {
+    "hid_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "SemVer version of this HID document."
+    },
+    "module": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Top-level module name (snake_case)."
+    },
+    "description": {
+      "type": "string"
+    },
+    "srs_ref": {
+      "type": "string",
+      "description": "Path to the upstream SRS document."
+    },
+    "srs_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "parameters": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/parameter" }
+    },
+    "clocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/clock" }
+    },
+    "resets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/reset" }
+    },
+    "ports": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/port" }
+    },
+    "protocols": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/protocol" }
+    },
+    "timing": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/timing" }
+    },
+    "trace": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/trace" }
+    }
+  },
+  "definitions": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "widthExpr": {
+      "description": "Bit width: positive integer or expression referencing a parameter (e.g. WIDTH, WIDTH*2).",
+      "oneOf": [
+        { "type": "integer", "minimum": 1 },
+        { "type": "string", "minLength": 1 }
+      ]
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "default"],
+      "properties": {
+        "name":        { "$ref": "#/definitions/identifier" },
+        "type":        { "type": "string", "enum": ["int", "bool", "string", "bitvec"] },
+        "default":     {},
+        "range": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "freq_mhz"],
+      "properties": {
+        "name":        { "$ref": "#/definitions/identifier" },
+        "freq_mhz":    { "type": "number", "exclusiveMinimum": 0 },
+        "domain":      { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "reset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "polarity", "sync"],
+      "properties": {
+        "name":     { "$ref": "#/definitions/identifier" },
+        "polarity": { "type": "string", "enum": ["active_low", "active_high"] },
+        "sync": {
+          "type": "string",
+          "enum": ["sync", "async", "async_assert_sync_release"]
+        },
+        "domain":      { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "dir", "width"],
+      "properties": {
+        "name":        { "$ref": "#/definitions/identifier" },
+        "dir":         { "type": "string", "enum": ["in", "out", "inout"] },
+        "width":       { "$ref": "#/definitions/widthExpr" },
+        "clock":       { "type": "string" },
+        "reset":       { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "scope"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["handshake", "valid_ready", "axi_lite", "axi_stream", "axi", "apb", "custom"]
+        },
+        "scope":       { "type": "string" },
+        "valid":       { "type": "string" },
+        "ready":       { "type": "string" },
+        "data":        { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "latency", "type"],
+      "properties": {
+        "from":        { "type": "string" },
+        "to":          { "type": "string" },
+        "latency":     { "type": "number", "minimum": 0 },
+        "type":        { "type": "string", "enum": ["cycle", "ns", "ps"] },
+        "description": { "type": "string" }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["req"],
+      "properties": {
+        "req": {
+          "type": "string",
+          "pattern": "^(FR|NFR|C)-\\d{3,}$"
+        },
+        "ports": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "protocol":    { "type": "string" },
+        "clock":       { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}
