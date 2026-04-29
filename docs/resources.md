@@ -77,6 +77,29 @@
 
 ---
 
+## E. 推荐学习项目（2026）
+
+以下项目按推荐优先级排列，作为 VeriAI RAG 知识库、示例库和模块库的核心参考来源。
+
+| 排名 | 项目 | 链接 | License | 推荐指数 | 核心价值 | 对 VeriAI 用途 |
+|:---:|------|------|---------|:---:|------|------|
+| 1 | LiteX | https://github.com/enjoy-digital/litex | BSD-2-Clause | ★★★★★ | Python 生成完整 SoC，最成熟的开源 FPGA 框架 | Migen DSL → Verilog 生成链路参考；Wishbone/AXI-Lite 桥接模板；CSR 自动生成机制 |
+| 2 | VexRiscv | https://github.com/SpinalHDL/VexRiscv | MIT | ★★★★★ | FPGA 优化最佳 RISC-V 核，LiteX 深度集成 | 参数化流水线设计模式；CPU+总线+外设松耦合架构 |
+| 3 | FPGAwars/apio | https://github.com/FPGAwars/apio | GPL-2.0 | ★★★★★ | 80+ 开发板 + 60+ 示例，最适合入门 | 目标板约束数据库；入门示例难度分级；工程管理结构参考 |
+| 4 | Neorv32 | https://github.com/stnolting/neorv32 | BSD-3-Clause | ★★★★ | 文档极好，适合教学和小型项目 | 文档组织模板标杆；SRS/HID 模板对照优化；中规模模块拆解参考 |
+| 5 | OpenFPGA | https://github.com/lnis-uofu/OpenFPGA | MIT | ★★★★ | 学术级开源 FPGA IP 生成器 | 多目标 FPGA 架构后端候选；可编程互连建模方法 |
+| — | linux-on-litex-vexriscv | https://github.com/litex-hub/linux-on-litex-vexriscv | 见子仓库 | — | 完整 Linux SoC 示例 | Linux-capable SoC 集成复杂度参考 |
+| — | Arty-A7-FPGA-Projects | 搜索 "Arty-A7 FPGA Projects" | 逐项核对 | — | 实用 7 系列项目集合 | 面向开发板的实战模式提取 |
+| — | Fomu + foboot | https://github.com/im-tomu/foboot | Apache-2.0 | — | 极致小型完整开源栈 | 微型 FPGA 设计方案参考 |
+| — | os-fpga/open-source-fpga-resource | https://github.com/os-fpga/open-source-fpga-resource | 见仓库 | — | 开源 FPGA 资源导航站 | 持续补充可信资源清单 |
+
+**使用约定**
+- GPL/LGPL 项目不直接合并到主仓，作为对照实现放入 `third_party/` 或仅链接引用。
+- 学习笔记统一放在 `docs/learned/` 目录，命名格式：`<项目名>-<主题>.md`。
+- 从项目中提取的代码模式经重写后并入 `lib/`，原则是"学习模式，重写实现，保留来源声明"。
+
+---
+
 ## 引用与贡献
 
 新增资源请提交 PR 修改本文件，并补充：

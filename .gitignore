@@ -1,0 +1,6 @@
+lib/spi/tb_spi_master.vcd
+lib/spi/tb_spi_master.vvp
+lib/uart/build/
+*.vcd
+*.vvp
+*.out

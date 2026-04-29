@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VeriAI - AI辅助FPGA全链条开发平台 v0.2</title>
+  <title>VeriAI - AI辅助FPGA全链条开发平台 v0.3</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -31,24 +31,28 @@
     }
     .stage {
       background: #21262d; border: 1px solid #30363d; border-radius: 6px;
-      padding: 8px 14px; font-size: 0.85rem; cursor: pointer;
+      padding: 8px 12px; font-size: 0.8rem; cursor: pointer;
       transition: background 0.2s;
     }
     .stage:hover { background: #388bfd26; border-color: #58a6ff; }
     .stage.active { background: #1f4e79; border-color: #58a6ff; color: #58a6ff; }
+    .stage.gated { opacity: 0.5; background: #21262d; border-color: #30363d; color: #484f58; cursor: not-allowed; }
     .arrow { color: #58a6ff; font-size: 1.2rem; }
+    .gate-arrow { color: #d29922; font-size: 1.2rem; font-weight: bold; }
     .panel {
       background: #161b22; border: 1px solid #30363d; border-radius: 8px;
       padding: 20px; margin-bottom: 20px;
     }
     .panel h2 { font-size: 1rem; color: #58a6ff; margin-bottom: 12px; }
+    .panel h3 { font-size: 0.9rem; color: #8b949e; margin: 12px 0 8px; }
     textarea {
       width: 100%; background: #0d1117; color: #c9d1d9;
       border: 1px solid #30363d; border-radius: 6px;
       padding: 12px; font-size: 0.875rem; font-family: "Courier New", monospace;
-      resize: vertical; min-height: 140px; outline: none;
+      resize: vertical; min-height: 120px; outline: none;
     }
     textarea:focus { border-color: #58a6ff; }
+    textarea.small { min-height: 80px; }
     .btn {
       background: #238636; color: #fff; border: none;
       border-radius: 6px; padding: 10px 20px; cursor: pointer;
@@ -60,68 +64,141 @@
       color: #c9d1d9; margin-left: 8px;
     }
     .btn.secondary:hover { background: #30363d; }
+    .btn.warn { background: #9e6a03; }
+    .btn.warn:hover { background: #bb8009; }
     .output {
       background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
       padding: 12px; font-size: 0.825rem; font-family: "Courier New", monospace;
-      white-space: pre-wrap; max-height: 320px; overflow-y: auto;
+      white-space: pre-wrap; max-height: 360px; overflow-y: auto;
       color: #7ee787; margin-top: 12px;
     }
+    .output.warn { color: #d29922; }
+    .output.error { color: #f85149; }
     .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .tag {
       background: #21262d; border: 1px solid #30363d; border-radius: 12px;
       padding: 3px 10px; font-size: 0.78rem; color: #8b949e;
     }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .badge {
+      display: inline-block; border-radius: 10px; padding: 2px 8px;
+      font-size: 0.7rem; font-weight: bold;
+    }
+    .badge.p0 { background: #f8514926; color: #f85149; border: 1px solid #f85149; }
+    .badge.p1 { background: #d2992226; color: #d29922; border: 1px solid #d29922; }
+    .badge.p2 { background: #8b949e26; color: #8b949e; border: 1px solid #8b949e; }
+    .badge.draft { background: #8b949e26; color: #8b949e; border: 1px solid #8b949e; }
+    .badge.baseline { background: #23863626; color: #3fb950; border: 1px solid #3fb950; }
+    .badge.open { background: #f8514926; color: #f85149; border: 1px solid #f85149; }
+    .badge.closed { background: #23863626; color: #3fb950; border: 1px solid #3fb950; }
+    .checklist { list-style: none; padding: 0; }
+    .checklist li { padding: 3px 0; font-size: 0.8rem; font-family: "Courier New", monospace; }
+    .checklist li.pass { color: #3fb950; }
+    .checklist li.pending { color: #d29922; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin: 8px 0; }
+    th, td { border: 1px solid #30363d; padding: 6px 8px; text-align: left; }
+    th { background: #21262d; color: #8b949e; }
     @media (max-width: 768px) { .grid2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 <header>
   <h1>⚡ VeriAI</h1>
-  <span>v0.2 FullChain</span>
+  <span>v0.3 FullChain</span>
   <span style="margin-left:auto;font-size:0.75rem;color:#8b949e;">
-    AI辅助FPGA全链条开发平台
+    文档对齐优先 — Spec + HID Draft → SRS → Baseline
   </span>
 </header>
 
 <div class="container">
   <!-- Pipeline Overview -->
   <div class="pipeline">
-    <div class="stage active" onclick="selectStage(0)">📄 任务书输入</div>
+    <div class="stage active" onclick="selectStage(0)">📄 任务书</div>
     <div class="arrow">→</div>
-    <div class="stage" onclick="selectStage(1)">🔍 需求分析</div>
+    <div class="stage" onclick="selectStage(1)">📝 HID草稿</div>
     <div class="arrow">→</div>
-    <div class="stage" onclick="selectStage(2)">🏗 架构定义</div>
+    <div class="stage" onclick="selectStage(2)">🔍 SRS草稿</div>
     <div class="arrow">→</div>
-    <div class="stage" onclick="selectStage(3)">💻 RTL 生成</div>
+    <div class="stage" onclick="selectStage(3)">⚠️ 问题清单</div>
     <div class="arrow">→</div>
-    <div class="stage" onclick="selectStage(4)">✅ 验证</div>
+    <div class="stage" onclick="selectStage(4)">✅ Baseline</div>
+    <div class="gate-arrow">⛔⇒</div>
+    <div class="stage gated" id="pipeline-arch">🏗 架构</div>
+    <div class="arrow">→</div>
+    <div class="stage gated" id="pipeline-rtl">💻 RTL</div>
+    <div class="arrow">→</div>
+    <div class="stage gated" id="pipeline-verify">✅ 验证</div>
   </div>
 
-  <!-- Stage 0: Task Input -->
+  <!-- Stage 0: Spec Input -->
   <div id="stage-0" class="panel">
-    <h2>📄 任务书输入</h2>
+    <h2>📄 任务书输入（Spec）</h2>
     <textarea id="task-input" placeholder="请输入中文任务书，例如：
 设计一个 UART 收发模块，波特率 115200，数据位 8，停止位 1，无校验。
 需要兼容 Xilinx Virtex-7 FPGA，时钟频率 100MHz。
 提供可综合的 Verilog 代码，包含参数化波特率分频器。">设计一个参数化 FIFO 模块，深度 512，数据宽度 32bit，同步读写，支持 almost_full / almost_empty 标志。目标器件：Xilinx Virtex-7，时钟 200MHz。要求代码可直接综合。</textarea>
+  </div>
+
+  <!-- Stage 1: HID Draft + Initial Draft -->
+  <div id="stage-1" class="panel" style="display:none">
+    <h2>📝 硬件描述草稿输入（HID Draft）</h2>
+    <textarea id="hid-input" class="small" placeholder="可选：输入 YAML/文本 形式的硬件接口描述草稿，如端口列表、协议类型、时钟域等。可与任务书一起作为需求对齐的输入材料。"># HID Draft - sync_fifo
+clocks:
+  - clk: 200MHz, domain: main
+resets:
+  - rst_n: active_low, async_assert_sync_release
+ports:
+  - wr_en, wr_data[31:0], full
+  - rd_en, rd_data[31:0], empty
+  - almost_full, almost_empty
+  - data_count
+protocols:
+  - write: handshake (wr_en & ~full)
+  - read:  handshake (rd_en & ~empty)</textarea>
+
+    <h3>📋 需求分析初始草稿 / 简单描述（可选）</h3>
+    <textarea id="draft-input" class="small" placeholder="可选：已有需求分析草稿、初步 SRS 思路或简单文字描述，作为需求对齐 Agent 的补充输入。"></textarea>
+  </div>
+
+  <!-- Stage 2: SRS Draft -->
+  <div id="stage-2" class="panel" style="display:none">
+    <h2>🔍 SRS 草稿生成</h2>
+    <div style="margin-bottom:8px;">
+      <span class="badge draft">SRS STATUS: DRAFT</span>
+    </div>
+    <div class="output" id="srs-output">（点击"开始需求对齐"生成）</div>
+  </div>
+
+  <!-- Stage 3: Issue List -->
+  <div id="stage-3" class="panel" style="display:none">
+    <h2>⚠️ 不一致问题清单</h2>
+    <div class="output warn" id="issues-output">（基于 SRS 草稿自动检出）</div>
+  </div>
+
+  <!-- Stage 4: Revision Suggestions + Baseline Gate -->
+  <div id="stage-4" class="panel" style="display:none">
+    <h2>📝 上游文档修订建议</h2>
+    <div class="output" id="revision-output">（基于问题清单自动生成修订建议）</div>
+
+    <h2 style="margin-top:16px;">✅ 合格 SRS / Baseline</h2>
+    <div id="baseline-check" style="display:none;">
+      <ul class="checklist" id="baseline-checklist"></ul>
+      <div style="margin-top:8px;">
+        <span class="badge baseline" id="baseline-badge" style="display:none;">BASELINE: QUALIFIED</span>
+        <span class="badge draft" id="baseline-draft-badge">BASELINE: PENDING</span>
+      </div>
+    </div>
     <div>
-      <button class="btn" onclick="runAnalysis()">🚀 开始全链条分析</button>
-      <button class="btn secondary" onclick="clearAll()">清空</button>
+      <button class="btn" id="btn-revise" onclick="simulateRevision()" style="display:none;">🔧 模拟修订：关闭 P0 问题</button>
+      <button class="btn warn" id="btn-baseline" onclick="qualifyBaseline()" style="display:none;">✅ 确认 SRS Baseline</button>
     </div>
   </div>
 
-  <!-- Stage 1: Requirements -->
-  <div id="stage-1" class="panel" style="display:none">
-    <h2>🔍 软件需求分析</h2>
-    <div class="output" id="req-output">（点击"开始全链条分析"生成）</div>
-  </div>
-
-  <!-- Stage 2 & 3 grid -->
-  <div class="grid2" id="stages-2-3" style="display:none">
+  <!-- Stage 5 & 6: Architecture & RTL (behind gate) -->
+  <div class="grid2" id="stages-5-6" style="display:none">
     <div class="panel">
-      <h2>🏗 硬件架构定义</h2>
-      <div class="output" id="arch-output">（等待需求分析完成）</div>
+      <h2>🏗 硬件架构定义（HID Baseline）</h2>
+      <div class="output" id="arch-output">（等待 SRS Baseline 确认）</div>
     </div>
     <div class="panel">
       <h2>💻 RTL 代码生成</h2>
@@ -129,8 +206,8 @@
     </div>
   </div>
 
-  <!-- Stage 4: Verification -->
-  <div id="stage-4" class="panel" style="display:none">
+  <!-- Stage 7: Verification -->
+  <div id="stage-7" class="panel" style="display:none">
     <h2>✅ 验证报告</h2>
     <div class="output" id="verify-output">（等待 RTL 生成完成）</div>
   </div>
@@ -139,7 +216,7 @@
   <div class="panel">
     <h2>📦 内置 Verilog 模块库（Virtex-7 兼容）</h2>
     <div class="tag-row">
-      <span class="tag">sync_fifo</span>
+      <span class="tag">sync_fifo ✅ 金标准</span>
       <span class="tag">async_fifo</span>
       <span class="tag">uart_tx</span>
       <span class="tag">uart_rx</span>
@@ -157,24 +234,48 @@
 
 <script>
   const stages = document.querySelectorAll('.stage');
+  let srsQualified = false;
+  let hasIssues = false;
+
   function selectStage(i) {
     stages.forEach((s, idx) => s.classList.toggle('active', idx === i));
   }
 
   function clearAll() {
     document.getElementById('task-input').value = '';
-    ['req-output','arch-output','rtl-output','verify-output'].forEach(id => {
+    document.getElementById('hid-input').value = '';
+    document.getElementById('draft-input').value = '';
+    ['srs-output','issues-output','revision-output','arch-output','rtl-output','verify-output'].forEach(id => {
       document.getElementById(id).textContent = '（已清空）';
     });
-    ['stage-1','stages-2-3','stage-4'].forEach(id => {
+    ['stage-1','stage-2','stage-3','stage-4','stages-5-6','stage-7','btn-revise','btn-baseline','baseline-check'].forEach(id => {
       document.getElementById(id).style.display = 'none';
     });
+    document.getElementById('baseline-badge').style.display = 'none';
+    document.getElementById('baseline-draft-badge').style.display = 'none';
+    resetGate();
+    srsQualified = false;
+    hasIssues = false;
     selectStage(0);
+  }
+
+  function resetGate() {
+    ['pipeline-arch','pipeline-rtl','pipeline-verify'].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.add('gated');
+      el.classList.remove('active');
+    });
+  }
+
+  function openGate() {
+    ['pipeline-arch','pipeline-rtl','pipeline-verify'].forEach(id => {
+      document.getElementById(id).classList.remove('gated');
+    });
   }
 
   async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  async function typeText(el, text, delay = 12) {
+  async function typeText(el, text, delay = 10) {
     el.textContent = '';
     for (const ch of text) { el.textContent += ch; await sleep(delay); }
   }
@@ -183,31 +284,266 @@
     const task = document.getElementById('task-input').value.trim();
     if (!task) { alert('请输入任务书内容'); return; }
 
-    // Stage 1
+    // Reset gate
+    srsQualified = false;
+    resetGate();
+    document.getElementById('stage-7').style.display = 'none';
+    document.getElementById('stages-5-6').style.display = 'none';
+
+    // Show stage 1 (HID input)
     document.getElementById('stage-1').style.display = 'block';
     selectStage(1);
-    const reqEl = document.getElementById('req-output');
-    await typeText(reqEl, `[需求分析 Agent]\n正在解析任务书...\n\n✔ 功能需求：\n  - 参数化深度/宽度 FIFO\n  - 同步读写接口\n  - almost_full / almost_empty 状态标志\n\n✔ 性能需求：\n  - 时钟频率：200 MHz\n  - 深度：512 entries（可参数化）\n  - 数据宽度：32 bit\n\n✔ 约束需求：\n  - 目标器件：Xilinx Virtex-7\n  - 代码可综合（Vivado 2023+）`);
-
-    await sleep(400);
-
-    // Stage 2 & 3
-    document.getElementById('stages-2-3').style.display = 'grid';
-    selectStage(2);
-    await typeText(document.getElementById('arch-output'),
-`[架构 Agent]\n模块层次：\n  sync_fifo_top\n  ├── fifo_mem      (RAM 阵列)\n  ├── wr_ctrl       (写指针 + 满标志)\n  └── rd_ctrl       (读指针 + 空标志)\n\n接口信号：\n  clk, rst_n\n  wr_en, wr_data[31:0]\n  rd_en, rd_data[31:0]\n  full, empty\n  almost_full, almost_empty\n  data_count[$clog2(DEPTH):0]`);
-
-    selectStage(3);
-    await typeText(document.getElementById('rtl-output'),
-`// [RTL Agent] 自动生成\nmodule sync_fifo #(\n  parameter DEPTH = 512,\n  parameter WIDTH = 32,\n  parameter AF_THRESH = DEPTH - 4,\n  parameter AE_THRESH = 4\n)(\n  input  wire             clk,\n  input  wire             rst_n,\n  input  wire             wr_en,\n  input  wire [WIDTH-1:0] wr_data,\n  input  wire             rd_en,\n  output reg  [WIDTH-1:0] rd_data,\n  output wire             full,\n  output wire             empty,\n  output wire             almost_full,\n  output wire             almost_empty,\n  output wire [$clog2(DEPTH):0] data_count\n);\n  // ... (完整实现 - Phase 1 待开发，见 lib/fifo/)\nendmodule`);
 
     await sleep(300);
 
-    // Stage 4
+    // Stage 2: SRS Draft Generation
+    document.getElementById('stage-2').style.display = 'block';
+    selectStage(2);
+    const srsEl = document.getElementById('srs-output');
+    await typeText(srsEl,
+`┌─────────────────────────────────────────────┐
+│  VeriAI 需求对齐 Agent v0.3                 │
+│  SRS STATUS: DRAFT                          │
+└─────────────────────────────────────────────┘
+
+📥 输入材料清单：
+  IN-001 任务书 / Spec .................... ✅ 已加载
+  IN-002 HID 草稿 / HID Draft ............. ✅ 已加载
+  IN-003 需求分析初始草稿 / 简单描述 ....... ⬜ 未提供
+
+─────────────────────────────────────────────
+📋 功能需求 FR（基于 Spec + HID Draft 抽取）：
+  FR-001 | P0 | FIFO 支持参数化深度配置 (DEPTH ≥ 16)         | Spec.一.要点1
+  FR-002 | P0 | FIFO 支持参数化位宽配置 (WIDTH ≥ 1)           | Spec.一.要点1
+  FR-003 | P0 | 同步写接口：wr_en × wr_data[WIDTH-1:0]       | HID.ports
+  FR-004 | P0 | 同步读接口：rd_en × rd_data[WIDTH-1:0]       | HID.ports
+  FR-005 | P0 | 满标志：FIFO 写满时 full=1，写操作静默丢弃    | HID.protocols
+  FR-006 | P0 | 空标志：FIFO 读空时 empty=1，读操作静默丢弃   | HID.protocols
+  FR-007 | P1 | almost_full 标志：可配置阈值，提前预警         | Spec.一.要点1
+  FR-008 | P1 | almost_empty 标志：可配置阈值，提前预警        | Spec.一.要点1
+  FR-009 | P2 | data_count 输出：当前 FIFO 占用条目数          | HID.ports
+
+📊 非功能需求 NFR：
+  NFR-001 | 性能 | Fmax ≥ 200 MHz                   | Spec.performance
+  NFR-002 | 资源 | LUT ≤ 2000, FF ≤ 2000            | Spec.resource_budget
+  NFR-003 | 语言 | Verilog-2001 可综合子集            | Spec.constraints
+
+🔒 约束 C：
+  C-001 | 器件：Xilinx 7 系列                          | Spec.target_device
+  C-002 | 工具链：Vivado 2023.2 / verilator            | Spec.toolchain`);
+
+    await sleep(500);
+
+    // Stage 3: Issue List
+    document.getElementById('stage-3').style.display = 'block';
+    selectStage(3);
+    const issuesEl = document.getElementById('issues-output');
+    await typeText(issuesEl,
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  不一致问题清单 — Spec vs HID Draft vs SRS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<span class="badge p0">P0</span> P#001 | Spec 要求 almost_full/almost_empty 阈值配置，
+     | 但 Spec 未给出具体 AF_THRESH/AE_THRESH 默认值
+     | 影响：FR-007, FR-008（参数默认值缺失）
+     | 状态：OPEN
+
+<span class="badge p1">P1</span> P#002 | HID Draft 定义了 data_count 端口，但 Spec 功能
+     | 描述中未提及"可观测 FIFO 水位"这一用途
+     | 影响：FR-009（需求描述不完整）
+     | 状态：OPEN
+
+<span class="badge p1">P1</span> P#003 | Spec 提到"参数化模块"，但未明确参数的最小/最大
+     | 范围。HID Draft 中有 DEPTH/WIDTH 参数但无 range。
+     | 影响：FR-001, FR-002（约束条件缺失）
+     | 状态：OPEN
+
+<span class="badge p2">P2</span> P#004 | HID Draft 中复位策略标注为 async_assert_sync_release，
+     | Spec.四中未填复位策略，二者不一致。
+     | 影响：NFR-001（时序约束相关）
+     | 状态：OPEN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  共 4 个问题：P0=1, P1=2, P2=1 | OPEN=4
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    hasIssues = true;
+
+    await sleep(500);
+
+    // Stage 4: Revision Suggestions
     document.getElementById('stage-4').style.display = 'block';
     selectStage(4);
+    const revEl = document.getElementById('revision-output');
+    await typeText(revEl,
+`基于问题清单，生成以下上游文档修订建议：
+
+REV-001 → Spec.一.要点1
+  补充 almost_full / almost_empty 的参数化阈值说明：
+  建议 AF_THRESH = DEPTH - 4, AE_THRESH = 4
+  关联问题：P#001
+
+REV-002 → Spec.一.功能要点
+  补充 data_count 功能的用途说明："输出当前 FIFO 水位，
+  供上层 flow control 使用"
+  关联问题：P#002
+
+REV-003 → HID Draft parameters
+  为 DEPTH 增加 range: [16, 8192]，建议 2 的幂
+  为 WIDTH 增加 range: [1, 1024]
+  关联问题：P#003
+
+REV-004 → Spec.四.特殊约束与边界条件
+  补充复位策略：async_assert_sync_release
+  关联问题：P#004`);
+
+    document.getElementById('btn-revise').style.display = 'inline-block';
+    document.getElementById('baseline-check').style.display = 'block';
+    updateChecklist();
+    document.getElementById('baseline-draft-badge').style.display = 'inline-block';
+  }
+
+  function updateChecklist() {
+    const cl = document.getElementById('baseline-checklist');
+    if (!hasIssues) {
+      cl.innerHTML = `
+        <li class="pass">✅ 所有 P0 需求有明确来源</li>
+        <li class="pass">✅ 所有接口行为有 HID 对应项</li>
+        <li class="pass">✅ 所有 P0 冲突问题已关闭</li>
+        <li class="pass">✅ 所有需求具备可验证方式</li>
+        <li class="pass">✅ 一致性检查表全部通过</li>
+        <li class="pass">✅ RTM 双向可追溯</li>
+        <li class="pass">✅ 上游文档修订建议全部执行</li>`;
+    } else {
+      cl.innerHTML = `
+        <li class="pass">✅ 所有 P0 需求有明确来源</li>
+        <li class="pass">✅ 所有接口行为有 HID 对应项</li>
+        <li class="pending">⬜ 所有 P0 冲突问题已关闭 <span class="badge open">P0 ISSUES OPEN</span></li>
+        <li class="pass">✅ 所有需求具备可验证方式</li>
+        <li class="pending">⬜ 一致性检查表全部通过（P#001/P#003 阻塞）</li>
+        <li class="pass">✅ RTM 双向可追溯</li>
+        <li class="pending">⬜ 上游文档修订建议全部执行（REV-001 待执行）</li>`;
+    }
+  }
+
+  function simulateRevision() {
+    hasIssues = false;
+    // Update issues output to show closed
+    const issuesEl = document.getElementById('issues-output');
+    issuesEl.innerHTML = issuesEl.innerHTML
+      .replace(/OPEN/g, '<span class="badge closed">CLOSED</span>')
+      .replace(/共 4 个问题.*/, '共 4 个问题：已全部关闭 | CLOSED=4');
+    // Update revision output
+    const revEl = document.getElementById('revision-output');
+    revEl.innerHTML = revEl.innerHTML
+      .replace(/REV-001/g, 'REV-001 ✅')
+      .replace(/REV-002/g, 'REV-002 ✅')
+      .replace(/REV-003/g, 'REV-003 ✅')
+      .replace(/REV-004/g, 'REV-004 ✅')
+      + '\n\n✅ 所有修订建议已执行。';
+    updateChecklist();
+    document.getElementById('baseline-draft-badge').style.display = 'none';
+    document.getElementById('baseline-badge').style.display = 'inline-block';
+    document.getElementById('btn-revise').style.display = 'none';
+    document.getElementById('btn-baseline').style.display = 'inline-block';
+  }
+
+  async function qualifyBaseline() {
+    if (hasIssues) { alert('请先关闭所有 P0 问题（点击"模拟修订"）'); return; }
+
+    srsQualified = true;
+    openGate();
+    document.getElementById('baseline-badge').style.display = 'inline-block';
+    document.getElementById('baseline-draft-badge').style.display = 'none';
+    document.getElementById('btn-baseline').style.display = 'none';
+
+    // Update SRS status
+    const srsEl = document.getElementById('srs-output');
+    srsEl.innerHTML = srsEl.innerHTML.replace('SRS STATUS: DRAFT', 'SRS STATUS: BASELINE ✅');
+
+    // Show architecture & RTL
+    document.getElementById('stages-5-6').style.display = 'grid';
+    selectStage(5);
+
+    // Generate Architecture
+    const archEl = document.getElementById('arch-output');
+    await typeText(archEl,
+`[架构 Agent — 基于 SRS Baseline 生成 HID Baseline]
+模块层次：
+  sync_fifo_top
+  ├── fifo_mem      (RAM 阵列: DEPTH × WIDTH)
+  ├── wr_ctrl       (写指针 + 满/almost_full 标志生成)
+  └── rd_ctrl       (读指针 + 空/almost_empty 标志生成)
+
+接口信号 (HID Baseline, hid_status: hid_baseline)：
+  clk, rst_n
+  wr_en, wr_data[WIDTH-1:0]
+  rd_en, rd_data[WIDTH-1:0]
+  full, empty
+  almost_full, almost_empty
+  data_count[$clog2(DEPTH):0]
+
+参数：
+  DEPTH=512 (range: [16,8192], 2 的幂)
+  WIDTH=32  (range: [1,1024])
+  AF_THRESH = DEPTH-4
+  AE_THRESH = 4
+
+RTM 追溯：FR-001~009, NFR-001~003 全部可追溯到本 HID`);
+
+    selectStage(6);
+
+    // Generate RTL
+    const rtlEl = document.getElementById('rtl-output');
+    await typeText(rtlEl,
+`// [RTL Agent] 基于 HID Baseline 自动生成
+// 目标器件：Xilinx Virtex-7  |  语言：Verilog-2001
+
+module sync_fifo #(
+  parameter DEPTH = 512,
+  parameter WIDTH = 32,
+  parameter AF_THRESH = DEPTH - 4,
+  parameter AE_THRESH = 4
+)(
+  input  wire             clk,
+  input  wire             rst_n,
+  input  wire             wr_en,
+  input  wire [WIDTH-1:0] wr_data,
+  input  wire             rd_en,
+  output reg  [WIDTH-1:0] rd_data,
+  output wire             full,
+  output wire             empty,
+  output wire             almost_full,
+  output wire             almost_empty,
+  output wire [$clog2(DEPTH):0] data_count
+);
+  // 完整实现见 lib/fifo/sync_fifo.v（金标准）
+endmodule
+
+✅ 代码可综合 | ✅ 参数化设计 | ✅ 接口与 HID Baseline 一致`);
+
+    await sleep(400);
+
+    // Show verification
+    document.getElementById('stage-7').style.display = 'block';
+    selectStage(7);
     await typeText(document.getElementById('verify-output'),
-`[验证 Agent]\n✔ 语法检查：PASSED\n✔ 端口完整性：PASSED\n✔ 参数化验证：PASSED（DEPTH/WIDTH 可配置）\n✔ 综合估算（Virtex-7 XC7VX485T）：\n   - LUT：~320\n   - FF： ~68\n   - BRAM：1x RAMB36E1\n   - Fmax：≥ 220 MHz\n✔ 仿真覆盖率：87%（建议补充边界测试）\n\n⚠ 建议：添加 ECC 保护可提升可靠性。\n\n✅ RTL 已就绪，可导入 Vivado 工程。`);
+`[验证 Agent — 基于 SRS Baseline + HID Baseline]
+✔ 语法检查：PASSED (Vivado 2023.2 / iverilog)
+✔ 端口一致性：与 HID Baseline 完全匹配
+✔ 参数化验证：PASSED（DEPTH=16~8192, WIDTH=1~1024）
+✔ RTM 覆盖：
+   - FR-001~009 全部对应测试用例 tc_01~tc_10
+   - NFR-001 Fmax: ≥ 220 MHz ✅
+   - NFR-002 资源：LUT ~320 / FF ~68 / BRAM 1x ✅
+   - NFR-003 覆盖率：≥ 87% ✅
+
+✔ 综合估算（Virtex-7 XC7VX485T）：
+   - LUT：~320
+   - FF： ~68
+   - BRAM：1x RAMB36E1
+   - Fmax：≥ 220 MHz
+
+✅ ✅ ✅ 全链条通过 — SRS Baseline → HID Baseline → RTL → 验证`);
   }
 </script>
 </body>
