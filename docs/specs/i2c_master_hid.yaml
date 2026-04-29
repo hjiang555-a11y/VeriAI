@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=../../docs/schemas/hid.schema.json
+
+hid_version: 0.1.0
+hid_status: hid_draft
+module: i2c_master
+description: I2C 主控制器，支持标准/快速模式，7 位寻址，时钟拉伸检测，逐字节读写。
+srs_ref: ""
+srs_version: ""
+
+parameters:
+  - name: CLK_FREQ
+    type: int
+    default: 100000000
+    range: [1000000, 500000000]
+    description: 系统时钟频率 (Hz)
+  - name: I2C_FREQ
+    type: int
+    default: 100000
+    range: [10000, 400000]
+    description: I2C 总线频率 (Hz)，100kHz 标准模式或 400kHz 快速模式
+
+clocks:
+  - name: clk
+    freq_mhz: 100
+    domain: main
+
+resets:
+  - name: rst_n
+    polarity: active_low
+    sync: sync
+    domain: main
+
+ports:
+  - {name: clk,       dir: in,  width: 1,        description: 系统时钟}
+  - {name: rst_n,     dir: in,  width: 1,        description: 同步低有效复位}
+  - {name: cmd,       dir: in,  width: 3,        description: 命令码 (0=START, 1=STOP, 2=WRITE, 3=READ_ACK, 4=READ_NACK)}
+  - {name: cmd_start, dir: in,  width: 1,        description: 命令启动脉冲 (busy 时忽略)}
+  - {name: dev_addr,  dir: in,  width: 7,        description: 7 位从设备地址}
+  - {name: tx_data,   dir: in,  width: 8,        description: 待发送数据字节}
+  - {name: rx_data,   dir: out, width: 8,        description: 接收数据字节}
+  - {name: rx_valid,  dir: out, width: 1,        description: 接收有效脉冲 (读字节或 ACK 结果时)}
+  - {name: ack_err,   dir: out, width: 1,        description: NACK 错误 (与 rx_valid 同时有效时表示收到 NACK)}
+  - {name: busy,      dir: out, width: 1,        description: 操作忙标志}
+  - {name: bus_busy,  dir: out, width: 1,        description: I2C 总线忙标志 (SDA 被拉低)}
+  - {name: scl_o,     dir: out, width: 1,        description: SCL 开漏输出}
+  - {name: scl_i,     dir: in,  width: 1,        description: SCL 输入 (用于时钟拉伸检测)}
+  - {name: sda_o,     dir: out, width: 1,        description: SDA 开漏输出}
+  - {name: sda_i,     dir: in,  width: 1,        description: SDA 输入 (用于采样/ACK 检测)}
+
+protocols:
+  - type: custom
+    scope: command
+    description: 命令驱动接口，逐字节 I2C 传输
+
+timing:
+  - {from: cmd_start, to: busy, latency: 1, type: cycle, description: 命令启动到 busy 置位延迟}
+
+trace:
+  - {req: FR-001, ports: [scl_o, scl_i, sda_o, sda_i], protocol: i2c_physical}
+  - {req: FR-002, ports: [cmd, cmd_start, busy], protocol: command}
+  - {req: FR-003, ports: [tx_data, rx_data, rx_valid, ack_err], protocol: data}

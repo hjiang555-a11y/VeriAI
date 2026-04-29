@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../../docs/schemas/hid.schema.json
+
+hid_version: 0.1.0
+hid_status: hid_draft
+module: gpio
+description: 参数化通用输入输出模块，每引脚独立方向控制，单周期读写。
+srs_ref: ""
+srs_version: ""
+
+parameters:
+  - name: WIDTH
+    type: int
+    default: 32
+    range: [1, 128]
+    description: GPIO 引脚数量
+
+clocks:
+  - name: clk
+    freq_mhz: 200
+    domain: main
+
+resets:
+  - name: rst_n
+    polarity: active_low
+    sync: sync
+    domain: main
+
+ports:
+  - {name: clk,       dir: in,  width: 1,        description: 系统时钟}
+  - {name: rst_n,     dir: in,  width: 1,        description: 同步低有效复位}
+  - {name: dir,       dir: in,  width: WIDTH,    description: 方向控制 (1=output, 0=input)}
+  - {name: out_data,  dir: in,  width: WIDTH,    description: 输出数据 (dir=1 时驱动引脚)}
+  - {name: in_data,   dir: out, width: WIDTH,    description: 输入数据 (当前引脚电平)}
+  - {name: gpio_pins, dir: inout, width: WIDTH,  description: 物理 GPIO 引脚}
+
+protocols:
+  - type: custom
+    scope: io
+    description: 直接寄存器映射 I/O，单周期访问
+
+timing:
+  - {from: out_data, to: gpio_pins, latency: 1, type: cycle, description: 输出写延迟}
+  - {from: gpio_pins, to: in_data, latency: 1, type: cycle, description: 输入读延迟}
+
+trace:
+  - {req: FR-001, ports: [dir, out_data, in_data, gpio_pins], protocol: io}
